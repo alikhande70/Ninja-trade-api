@@ -143,10 +143,10 @@ footer{padding-block:28px;font-size:13px;color:var(--muted)}
 
 <header class="top">
   <div class="intro">
-    <span class="eyebrow">پروژهٔ ربات معامله‌گر · نسخهٔ ۳ · MetaTrader 5 و LiteFinance</span>
+    <span class="eyebrow">پروژهٔ ربات معامله‌گر · نسخهٔ ۴ · MetaTrader 5 و LiteFinance</span>
     <h1>طرح ربات دفتر سفارش</h1>
     <p class="lead">یک اکسپرت خودمختار و ۲۴ ساعته روی متاتریدر ۵ که حجم هر معامله را از روی موجودی حساب تعیین می‌کند و یک مدل زبانی بر آن نظارت دارد. هزینه‌ها و سرمایهٔ لازم در این صفحه محاسبه شده‌اند.</p>
-    <p class="meta">به‌روزشده: ۲ مهر ۱۴۰۵ · قیمت‌ها و شرایط در همین تاریخ از منابع رسمی بررسی شده‌اند</p>
+    <p class="meta">به‌روزشده: ۲ مهر ۱۴۰۵ · اعداد ریسک «تنظیم پیشنهادی» و اعداد هزینه و زمان «برآورد» هستند، مگر اینکه منبع رسمی داشته باشند</p>
   </div>
 
   <form class="calc" id="calc" aria-labelledby="calc-title" novalidate>
@@ -175,14 +175,50 @@ footer{padding-block:28px;font-size:13px;color:var(--muted)}
 </header>
 
 <nav class="toc" aria-label="فهرست">
-  <a href="#facts">سه واقعیت</a><a href="#arch">معماری</a><a href="#sizing">حجم و ریسک</a><a href="#ai">هوش مصنوعی</a><a href="#cost">هزینه و سرمایه</a><a href="#autonomy">خودمختاری</a><a href="#roadmap">نقشهٔ راه</a><a href="#history">مسیرهای قبلی</a><a href="#open">سؤال باز</a>
+  <a href="#impact">اثر حذف سطح دو</a><a href="#status">وضعیت کار</a><a href="#facts">شواهد</a><a href="#arch">معماری</a><a href="#sizing">حجم و ریسک</a><a href="#ai">هوش مصنوعی</a><a href="#cost">هزینه و سرمایه</a><a href="#autonomy">خودمختاری</a><a href="#roadmap">نقشهٔ راه</a><a href="#history">مسیرهای قبلی</a><a href="#open">سؤال باز</a>
 </nav>
 
+<section id="impact">
+  <span class="eyebrow">اثر بر هدف اولیه</span>
+  <h2>بدون دفتر سفارش، ربات دیگری ساخته می‌شود</h2>
+  <p>اگر LiteFinance دفتر سفارش واقعی ندهد، که محتمل است ولی هنوز اندازه‌گیری نشده، جایگزینی آن با تغییرات قیمت و اسپرد نسخهٔ ساده‌ترِ همان ربات نیست. نتیجه یک <strong>ربات قیمت‌محور</strong> است، و فرضیهٔ اصلی پروژه یعنی «دفتر سفارش لبهٔ معاملاتی می‌سازد» در آن آزموده نمی‌شود.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>قابلیت</th><th>با فقط تیک و اسپرد</th></tr></thead>
+    <tbody>
+      <tr><td>حجم سفارش‌ها در سطوح قیمت (عمق و دیوارها)</td><td class="gate-stop">از دست می‌رود</td></tr>
+      <tr><td>عدم‌توازن جریان سفارش (OFI) و ریزقیمت، مستندترین پیش‌بینی‌کننده‌های کوتاه‌مدت</td><td class="gate-stop">از دست می‌رود؛ فقط تقریب ضعیف باقی می‌ماند</td></tr>
+      <tr><td>مدل‌سازی جایگاه در صف برای سفارش محدود</td><td class="gate-stop">از دست می‌رود</td></tr>
+      <tr><td>تشخیص لغو سفارش، جذب سفارش‌های بزرگ و سفارش‌های فریبنده</td><td class="gate-stop">از دست می‌رود</td></tr>
+      <tr><td>حجم واقعی معاملات و طرف آغازگر معامله</td><td class="gate-stop">از دست می‌رود؛ فقط حجم تیکی</td></tr>
+      <tr><td>دید کل بازار</td><td class="gate-stop">فقط قیمت‌های یک کارگزار</td></tr>
+      <tr><td>تیک، اسپرد، کندل، ساعات بازار، اخبار، موتور ریسک، هوش مصنوعی</td><td class="gate-ok">باقی می‌ماند</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><p><strong>پیشنهاد:</strong> هدف اولیه حفظ شود، به این شرط که بازاری با دفتر سفارش واقعی پیدا شود که برای محل اقامت شما مجاز باشد. برای ساکن ایران، گزینهٔ قابل بررسی یک صرافی داخلی رمزارز مثل نوبیتکس است که دفتر سفارش و API معامله دارد، ولی کارمزد حدود ۰٫۱٪ و مقررات متغیر بانک مرکزی دارد. اگر چنین بازاری تأیید نشود، ربات قیمت‌محور روی LiteFinance ساخته می‌شود، با علم به اینکه مبنای آن متفاوت است. دربارهٔ سودآوری هیچ مسیری هنوز نتیجه‌ای وجود ندارد؛ این نتیجه فقط پس از آزمون با هزینه‌های واقعی گرفته می‌شود.</p></div>
+</section>
+
+<section id="status">
+  <span class="eyebrow">وضعیت کار</span>
+  <h2>طراحی‌شده، ساخته‌شده، آزموده‌شده</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>بخش</th><th>وضعیت</th><th>آزمون</th></tr></thead>
+    <tbody>
+      <tr><td>محاسبهٔ حجم از موجودی و سقف‌های ضرر (پایتون)</td><td><span class="pill">ساخته‌شده</span></td><td>۱۳ آزمون واحد قبول؛ یک باگ مرز ۱۰٪ پیدا و رفع شد</td></tr>
+      <tr><td>موتور دفتر سفارش: بازسازی، کشف شکاف، OFI، ریزقیمت</td><td><span class="pill">ساخته‌شده</span></td><td>۵ آزمون با دادهٔ ساختگی</td></tr>
+      <tr><td>طبقه‌بندی دادهٔ حساب MT5</td><td><span class="pill">ساخته‌شده</span></td><td>۲ آزمون، فقط با دادهٔ ساختگی</td></tr>
+      <tr><td>اسکریپت بررسی داده، محاسبهٔ حجم و خودآزمایی به زبان MQL5</td><td><span class="pill">ساخته‌شده</span></td><td class="gate-stop">کامپایل‌نشده</td></tr>
+      <tr><td>اکسپرت کامل، سایدکار هوش مصنوعی، استراتژی، VPS</td><td><span class="pill money">فقط طراحی</span></td><td>—</td></tr>
+      <tr><td><strong>آزمون در MetaTrader با حساب دمو</strong></td><td colspan="2" class="gate-stop">هنوز هیچ بخشی. این محیط ویندوز و متاتریدر ندارد، و دسترسی شبکه به سرور دانلود MT5 برقرار نشد</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">قدم بعدی با شما: باز کردن حساب دموی ECN روی MT5، اجرای اسکریپت DataProbe (راهنما در <span class="num">mt5/README.md</span>) و فرستادن فایل خروجی. این کار «دفتر سفارش در دسترس نیست» را از حدس به شاهد تبدیل می‌کند.</p>
+</section>
+
 <section id="facts">
-  <span class="eyebrow">پیش از هر تصمیم</span>
-  <h2>سه واقعیت دربارهٔ LiteFinance و MT5</h2>
+  <span class="eyebrow">شواهد تا امروز</span>
+  <h2>قابلیت عمومی متاتریدر در برابر حساب ما</h2>
   <div class="verdict">
-    <div><span class="tag t-no">محدودیت</span><h3>دفتر سفارش واقعی وجود ندارد</h3><p>فارکس و طلای نقدی بازار متمرکز ندارند. عمق بازار در MT5 این کارگزار، اگر داده‌ای نشان دهد، قیمت‌های خود کارگزار است. به جای آن از دادهٔ تیک، پهنای اسپرد و سرعت تیک‌ها استفاده می‌شود.</p></div>
+    <div><span class="tag t-q">در انتظار اندازه‌گیری</span><h3>دفتر سفارش واقعی، محتمل نیست</h3><p>متاتریدر در حالت کلی عمق بازار را پشتیبانی می‌کند، ولی طبق راهنمای رسمی، دادهٔ واقعی فقط برای نمادهای بورسی است. حساب ECN این کارگزار «Market Execution» دارد و نمادهایش CFD هستند. دادهٔ واقعی حساب ما هنوز اندازه‌گیری نشده است.</p></div>
     <div><span class="tag t-q">ریسک</span><h3>کارگزار زیر نظارت نیست</h3><p>LiteFinance Global LLC در سنت‌وینسنت ثبت شده و ناظر مالی ندارد. بیش از مبلغی که از دست دادنش را تحمل می‌کنید در حساب نگه ندارید و سودها را منظم برداشت کنید.</p></div>
     <div><span class="tag t-ok">مزیت</span><h3>دسترسی و آزمون آسان</h3><p>مشتریان ایرانی را رسماً می‌پذیرد، حساب دمو و حساب سنت با واریز ۱۰ دلاری دارد، و تاریخچهٔ تیک واقعی‌اش در Strategy Tester در دسترس است.</p></div>
   </div>
@@ -205,7 +241,7 @@ footer{padding-block:28px;font-size:13px;color:var(--muted)}
 </section>
 
 <section id="sizing">
-  <span class="eyebrow">حجم معامله</span>
+  <span class="eyebrow">حجم معامله · اعداد: تنظیم پیشنهادی</span>
   <h2>ربات خودش موجودی را می‌خواند و حجم را تعیین می‌کند</h2>
   <ul class="clean">
     <li><strong>مبنا:</strong> کمترِ بالانس و اکوئیتی. وقتی موقعیتی در ضرر باز است، بالانس از پولی که واقعاً دارید بیشتر است.</li>
@@ -247,7 +283,7 @@ footer{padding-block:28px;font-size:13px;color:var(--muted)}
 </section>
 
 <section id="cost">
-  <span class="eyebrow">هزینه و سرمایه</span>
+  <span class="eyebrow">هزینه و سرمایه · همه برآورد است مگر اینکه منبع داشته باشد</span>
   <h2>برآورد کل هزینه</h2>
   <div class="big">
     <div><span class="v">$50–75</span><span class="l">کل هزینه تا پایان دمو (حدود ۴ ماه)، بدون سرمایهٔ در خطر</span></div>
@@ -312,7 +348,7 @@ footer{padding-block:28px;font-size:13px;color:var(--muted)}
 </section>
 
 <section id="roadmap">
-  <span class="eyebrow">نقشهٔ راه</span>
+  <span class="eyebrow">نقشهٔ راه · مدت‌ها برآورد است</span>
   <h2>هشت فاز تا حساب واقعی</h2>
   <div class="tbl"><table>
     <thead><tr><th>فاز</th><th>کار</th><th>مدت</th><th>معیار</th></tr></thead>
@@ -357,11 +393,12 @@ footer{padding-block:28px;font-size:13px;color:var(--muted)}
     <li><a href="https://www.metatrader5.com/en/terminal/help/trading/depth_of_market">MetaTrader 5: عمق بازار در بازار OTC</a> · <a href="https://www.mql5.com/en/forum/457940">پایتون MetaTrader5 فقط روی ویندوز</a></li>
     <li><a href="https://openrouter.ai/docs/api_reference/limits">OpenRouter: سقف مدل‌های رایگان</a> · <a href="https://costgoat.com/pricing/deepseek-api">DeepSeek: قیمت</a> · <a href="https://ai.google.dev/gemini-api/docs/rate-limits">Gemini: نسخهٔ رایگان</a> · <a href="https://www.anthropic.com/supported-countries">Anthropic: کشورهای پشتیبانی‌شده</a></li>
     <li><a href="https://singhajit.com/llm-inference-speed-comparison/">سرعت llama.cpp روی پردازنده</a></li>
+    <li><a href="https://www.mql5.com/en/docs/constants/environment_state/marketinfoconstants">MQL5: ویژگی‌های نماد</a> · <a href="https://apidocs.nobitex.ir/en/">API نوبیتکس</a> · <a href="https://help.nobitex.ir/knowledgebase/trading-fees/">کارمزد نوبیتکس</a> · <a href="https://iranbroker.net/news/central-banks-conditions-for-reopening-exchange-offices-have-been-announced/">محدودیت‌های بانک مرکزی</a></li>
     <li><a href="https://ninjatrader.com/pricing/">NinjaTrader</a> · <a href="https://databento.com/pricing">Databento</a> · <a href="https://bybit-exchange.github.io/docs/v5/demo">Bybit Demo</a> (مسیرهای قبلی)</li>
   </ul>
 </section>
 
-<footer>متن کامل در مخزن پروژه: <span class="num">docs/03-mt5-litefinance-design.md</span> (طرح فعلی)، و <span class="num">01</span> و <span class="num">02</span> (مسیرهای قبلی)</footer>
+<footer>متن کامل در مخزن پروژه: <span class="num">docs/04-l2-impact-and-evidence.md</span> (شواهد و پیشنهاد)، <span class="num">docs/03-mt5-litefinance-design.md</span> (طرح MT5)، و <span class="num">01</span> و <span class="num">02</span> (مسیرهای قبلی)</footer>
 </div>
 
 <script>

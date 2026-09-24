@@ -1,0 +1,18 @@
+{
+  "_note": "SYNTHETIC fixture for unit tests. Not measured data.",
+  "account": {"server": "Example-Demo", "company": "Example Broker", "trade_mode": "ACCOUNT_TRADE_MODE_DEMO"},
+  "symbols": [
+    {"name": "XAUUSD", "trade_exemode": "SYMBOL_TRADE_EXECUTION_MARKET", "calc_mode": "SYMBOL_CALC_MODE_CFD",
+     "book": {"subscribed": false, "snapshots": 0, "max_bid_levels": 0, "max_ask_levels": 0, "levels_with_volume": 0, "distinct_volumes": 0},
+     "ticks": {"count": 51234, "with_real_volume": 0, "with_flag_volume": 0}},
+    {"name": "EURUSD", "trade_exemode": "SYMBOL_TRADE_EXECUTION_MARKET", "calc_mode": "SYMBOL_CALC_MODE_FOREX",
+     "book": {"subscribed": true, "snapshots": 300, "max_bid_levels": 10, "max_ask_levels": 10, "levels_with_volume": 0, "distinct_volumes": 0},
+     "ticks": {"count": 40211, "with_real_volume": 0, "with_flag_volume": 0}},
+    {"name": "GBPUSD", "trade_exemode": "SYMBOL_TRADE_EXECUTION_MARKET", "calc_mode": "SYMBOL_CALC_MODE_FOREX",
+     "book": {"subscribed": true, "snapshots": 300, "max_bid_levels": 3, "max_ask_levels": 3, "levels_with_volume": 6, "distinct_volumes": 2},
+     "ticks": {"count": 30011, "with_real_volume": 0, "with_flag_volume": 0}},
+    {"name": "ESZ6", "trade_exemode": "SYMBOL_TRADE_EXECUTION_EXCHANGE", "calc_mode": "SYMBOL_CALC_MODE_EXCH_FUTURES",
+     "book": {"subscribed": true, "snapshots": 300, "max_bid_levels": 10, "max_ask_levels": 10, "levels_with_volume": 20, "distinct_volumes": 57},
+     "ticks": {"count": 90111, "with_real_volume": 20111, "with_flag_volume": 20111}}
+  ]
+}
