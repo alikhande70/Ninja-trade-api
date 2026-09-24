@@ -1,0 +1,455 @@
+<title>طرح ربات دفتر سفارش</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#F3F6F5; --surface:#FFFFFF; --ink:#15212A; --muted:#58676F; --line:#D8E0DF;
+  --accent:#0B6E78; --accent-soft:#E0F0F0; --bid:#1D7F55; --bid-soft:#E2F3EA;
+  --ask:#B83A34; --ask-soft:#F8E4E2; --warn:#9A6400; --warn-soft:#FBF0D9;
+  --sans:"Vazirmatn",Tahoma,"Segoe UI",sans-serif; --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#0E1518; --surface:#152025; --ink:#E2EAEC; --muted:#93A3AA; --line:#26363C;
+  --accent:#4CB8C2; --accent-soft:#16333A; --bid:#4CC08A; --bid-soft:#15302A;
+  --ask:#E9736B; --ask-soft:#3A1F1F; --warn:#E3B055; --warn-soft:#352A15;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0E1518; --surface:#152025; --ink:#E2EAEC; --muted:#93A3AA; --line:#26363C;
+  --accent:#4CB8C2; --accent-soft:#16333A; --bid:#4CC08A; --bid-soft:#15302A;
+  --ask:#E9736B; --ask-soft:#3A1F1F; --warn:#E3B055; --warn-soft:#352A15;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;padding-inline:16px;padding-block:0 64px}
+.wrap{max-width:980px;margin-inline:auto}
+h1,h2,h3{text-wrap:balance;line-height:1.35;margin:0}
+h1{font-size:clamp(28px,5vw,42px);font-weight:800}
+h2{font-size:24px;font-weight:800}
+h3{font-size:18px;font-weight:700}
+p{margin:0;max-width:68ch}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+.eyebrow{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.02em}
+.muted{color:var(--muted)}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* header */
+header.top{display:grid;grid-template-columns:1.3fr 1fr;gap:32px;align-items:center;padding-block:40px 32px;border-bottom:1px solid var(--line)}
+header.top .intro{display:flex;flex-direction:column;gap:14px}
+.meta{font-size:13px;color:var(--muted)}
+.ladder{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;font-size:13px}
+.ladder-head{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-bottom:8px}
+.row{display:grid;grid-template-columns:1fr auto;gap:8px;position:relative;padding:3px 8px;direction:ltr}
+.row .bar{position:absolute;inset-block:2px;right:0;border-radius:3px;z-index:0}
+.row span{position:relative;z-index:1;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.row.ask span:first-child{color:var(--ask)} .row.ask .bar{background:var(--ask-soft)}
+.row.bid span:first-child{color:var(--bid)} .row.bid .bar{background:var(--bid-soft)}
+.spread{display:flex;justify-content:space-between;gap:8px;padding:8px;margin-block:6px;border-block:1px dashed var(--line);font-size:12.5px}
+.spread b{font-weight:700}
+.cost-note{margin-top:10px;font-size:13px;line-height:1.7;color:var(--muted)}
+.cost-note strong{color:var(--ask)}
+
+nav.toc{display:flex;flex-wrap:wrap;gap:8px 18px;padding-block:18px;font-size:14px;border-bottom:1px solid var(--line)}
+nav.toc a{text-decoration:none;color:var(--muted)} nav.toc a:hover{color:var(--accent)}
+
+section{padding-block:44px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:18px}
+.lead{font-size:17.5px}
+
+.verdict{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.verdict > div{display:flex;flex-direction:column;gap:6px;padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.tag{align-self:flex-start;font-size:12.5px;font-weight:700;padding:2px 10px;border-radius:999px}
+.t-ok{background:var(--bid-soft);color:var(--bid)} .t-no{background:var(--ask-soft);color:var(--ask)} .t-q{background:var(--warn-soft);color:var(--warn)}
+
+.callout{padding:16px 18px;border-radius:10px;background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent)}
+.callout p{max-width:none}
+.callout.red{background:var(--ask-soft);border-color:color-mix(in srgb,var(--ask) 35%,transparent)}
+
+/* budget bar */
+.budget{display:flex;flex-direction:column;gap:12px}
+.stack{display:flex;height:44px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.stack div{display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden}
+.s-cap{background:var(--accent)} .s-ops1{background:#6A7F88} .s-ops2{background:#8FA1A8}
+.legend{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:14px}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{width:100%;border-collapse:collapse;font-size:14.5px;min-width:560px}
+th,td{text-align:right;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:13px;color:var(--muted);font-weight:700;background:color-mix(in srgb,var(--accent-soft) 45%,var(--surface))}
+tr:last-child td{border-bottom:0}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.total td{font-weight:800}
+
+.big{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.big div{display:flex;flex-direction:column;gap:2px}
+.big .v{font-family:var(--mono);font-size:30px;font-weight:600;color:var(--accent);direction:ltr;text-align:right}
+.big .l{font-size:14px;color:var(--muted)}
+
+/* pipeline */
+.pipe{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.stage{display:grid;grid-template-columns:150px 1fr;gap:16px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.stage:last-child{border-bottom:0}
+.stage b{font-size:15px}
+.stage.ai{background:var(--accent-soft)}
+.stage.risk{background:var(--ask-soft)}
+.stage p{font-size:14.5px}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+ul.clean{margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:6px}
+
+.phase-gate{font-size:13.5px}
+.gate-ok{color:var(--bid)} .gate-stop{color:var(--ask)}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:1px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.pill.money{background:var(--ask-soft);color:var(--ask)}
+
+ol.qs{margin:0;padding-inline-start:22px;display:flex;flex-direction:column;gap:10px}
+.sources{font-size:13.5px;line-height:1.9}
+.sources ul{margin:0;padding-inline-start:18px}
+footer{padding-block:28px;font-size:13px;color:var(--muted)}
+
+@media (max-width:760px){
+  header.top{grid-template-columns:1fr}
+  .verdict,.big,.two{grid-template-columns:1fr}
+  .stage{grid-template-columns:1fr;gap:4px}
+}
+@media (prefers-reduced-motion:no-preference){ .stack div{transition:filter .2s} .stack div:hover{filter:brightness(1.08)} }
+</style>
+
+<style>
+.calc{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;font-size:14px}
+.calc-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.calc-head b{font-size:15px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fields label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--muted)}
+.fields input,.fields select{font:inherit;font-size:15px;font-family:var(--mono);padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);direction:ltr;text-align:left;width:100%}
+.fields select{font-family:var(--sans);direction:rtl;text-align:right}
+.fields input:focus-visible,.fields select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.result{border-top:1px dashed var(--line);padding-top:12px;display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:baseline}
+.result .lot{grid-column:1/-1;display:flex;align-items:baseline;gap:10px}
+.result .lot .v{font-family:var(--mono);font-size:32px;font-weight:600;color:var(--accent);direction:ltr}
+.result dt{color:var(--muted);font-size:13px}
+.result dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;direction:ltr;text-align:right}
+.verdict-line{grid-column:1/-1;font-size:13.5px;padding:8px 10px;border-radius:6px;margin-top:4px;line-height:1.7}
+.v-ok{background:var(--bid-soft);color:var(--bid)} .v-no{background:var(--ask-soft);color:var(--ask)}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px}
+.flow span.box{padding:6px 12px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.flow span.arrow{color:var(--muted)}
+</style>
+
+<div class="wrap" dir="rtl" lang="fa">
+
+<header class="top">
+  <div class="intro">
+    <span class="eyebrow">پروژهٔ ربات معامله‌گر · نسخهٔ ۴ · MetaTrader 5 و LiteFinance</span>
+    <h1>طرح ربات دفتر سفارش</h1>
+    <p class="lead">یک اکسپرت خودمختار و ۲۴ ساعته روی متاتریدر ۵ که حجم هر معامله را از روی موجودی حساب تعیین می‌کند و یک مدل زبانی بر آن نظارت دارد. هزینه‌ها و سرمایهٔ لازم در این صفحه محاسبه شده‌اند.</p>
+    <p class="meta">به‌روزشده: ۲ مهر ۱۴۰۵ · اعداد ریسک «تنظیم پیشنهادی» و اعداد هزینه و زمان «برآورد» هستند، مگر اینکه منبع رسمی داشته باشند</p>
+  </div>
+
+  <form class="calc" id="calc" aria-labelledby="calc-title" novalidate>
+    <div class="calc-head"><b id="calc-title">حجم معامله از روی موجودی</b><span class="muted">همان قاعدهٔ اکسپرت</span></div>
+    <div class="fields">
+      <label for="c-bal">بالانس (دلار)<input id="c-bal" type="number" min="0" step="10" value="1000" inputmode="decimal"></label>
+      <label for="c-eq">اکوئیتی (دلار)<input id="c-eq" type="number" min="0" step="10" value="1000" inputmode="decimal"></label>
+      <label for="c-sym">نماد
+        <select id="c-sym">
+          <option value="xau">XAUUSD (طلا)</option>
+          <option value="eur">EURUSD</option>
+        </select>
+      </label>
+      <label for="c-sl"><span id="c-sl-label">حد ضرر (دلار حرکت قیمت)</span><input id="c-sl" type="number" min="0" step="0.5" value="6" inputmode="decimal"></label>
+      <label for="c-risk">ریسک هر معامله (٪)<input id="c-risk" type="number" min="0.1" max="2" step="0.05" value="0.75" inputmode="decimal"></label>
+      <label for="c-ai">ضریب هوش مصنوعی (۰ تا ۱)<input id="c-ai" type="number" min="0" max="1" step="0.25" value="1" inputmode="decimal"></label>
+    </div>
+    <dl class="result" aria-live="polite">
+      <div class="lot"><span class="muted">حجم مجاز</span><span class="v" id="r-lot">0.01</span><span class="muted">لات</span></div>
+      <dt>مبنای محاسبه (کمترِ بالانس و اکوئیتی)</dt><dd id="r-base">$1,000</dd>
+      <dt>بودجهٔ ریسک</dt><dd id="r-budget">$7.50</dd>
+      <dt>ریسک واقعی پس از گرد کردن</dt><dd id="r-actual">$6.10</dd>
+      <div class="verdict-line v-ok" id="r-verdict">مجاز</div>
+    </dl>
+  </form>
+</header>
+
+<nav class="toc" aria-label="فهرست">
+  <a href="#impact">اثر حذف سطح دو</a><a href="#status">وضعیت کار</a><a href="#facts">شواهد</a><a href="#arch">معماری</a><a href="#sizing">حجم و ریسک</a><a href="#ai">هوش مصنوعی</a><a href="#cost">هزینه و سرمایه</a><a href="#autonomy">خودمختاری</a><a href="#roadmap">نقشهٔ راه</a><a href="#history">مسیرهای قبلی</a><a href="#open">سؤال باز</a>
+</nav>
+
+<section id="impact">
+  <span class="eyebrow">اثر بر هدف اولیه</span>
+  <h2>بدون دفتر سفارش، ربات دیگری ساخته می‌شود</h2>
+  <p>اگر LiteFinance دفتر سفارش واقعی ندهد، که محتمل است ولی هنوز اندازه‌گیری نشده، جایگزینی آن با تغییرات قیمت و اسپرد نسخهٔ ساده‌ترِ همان ربات نیست. نتیجه یک <strong>ربات قیمت‌محور</strong> است، و فرضیهٔ اصلی پروژه یعنی «دفتر سفارش لبهٔ معاملاتی می‌سازد» در آن آزموده نمی‌شود.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>قابلیت</th><th>با فقط تیک و اسپرد</th></tr></thead>
+    <tbody>
+      <tr><td>حجم سفارش‌ها در سطوح قیمت (عمق و دیوارها)</td><td class="gate-stop">از دست می‌رود</td></tr>
+      <tr><td>عدم‌توازن جریان سفارش (OFI) و ریزقیمت، مستندترین پیش‌بینی‌کننده‌های کوتاه‌مدت</td><td class="gate-stop">از دست می‌رود؛ فقط تقریب ضعیف باقی می‌ماند</td></tr>
+      <tr><td>مدل‌سازی جایگاه در صف برای سفارش محدود</td><td class="gate-stop">از دست می‌رود</td></tr>
+      <tr><td>تشخیص لغو سفارش، جذب سفارش‌های بزرگ و سفارش‌های فریبنده</td><td class="gate-stop">از دست می‌رود</td></tr>
+      <tr><td>حجم واقعی معاملات و طرف آغازگر معامله</td><td class="gate-stop">از دست می‌رود؛ فقط حجم تیکی</td></tr>
+      <tr><td>دید کل بازار</td><td class="gate-stop">فقط قیمت‌های یک کارگزار</td></tr>
+      <tr><td>تیک، اسپرد، کندل، ساعات بازار، اخبار، موتور ریسک، هوش مصنوعی</td><td class="gate-ok">باقی می‌ماند</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><p><strong>پیشنهاد:</strong> هدف اولیه حفظ شود، به این شرط که بازاری با دفتر سفارش واقعی پیدا شود که برای محل اقامت شما مجاز باشد. برای ساکن ایران، گزینهٔ قابل بررسی یک صرافی داخلی رمزارز مثل نوبیتکس است که دفتر سفارش و API معامله دارد، ولی کارمزد حدود ۰٫۱٪ و مقررات متغیر بانک مرکزی دارد. اگر چنین بازاری تأیید نشود، ربات قیمت‌محور روی LiteFinance ساخته می‌شود، با علم به اینکه مبنای آن متفاوت است. دربارهٔ سودآوری هیچ مسیری هنوز نتیجه‌ای وجود ندارد؛ این نتیجه فقط پس از آزمون با هزینه‌های واقعی گرفته می‌شود.</p></div>
+</section>
+
+<section id="status">
+  <span class="eyebrow">وضعیت کار</span>
+  <h2>طراحی‌شده، ساخته‌شده، آزموده‌شده</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>بخش</th><th>وضعیت</th><th>آزمون</th></tr></thead>
+    <tbody>
+      <tr><td>محاسبهٔ حجم از موجودی و سقف‌های ضرر (پایتون)</td><td><span class="pill">ساخته‌شده</span></td><td>۱۳ آزمون واحد قبول؛ یک باگ مرز ۱۰٪ پیدا و رفع شد</td></tr>
+      <tr><td>موتور دفتر سفارش: بازسازی، کشف شکاف، OFI، ریزقیمت</td><td><span class="pill">ساخته‌شده</span></td><td>۵ آزمون با دادهٔ ساختگی</td></tr>
+      <tr><td>طبقه‌بندی دادهٔ حساب MT5</td><td><span class="pill">ساخته‌شده</span></td><td>۲ آزمون، فقط با دادهٔ ساختگی</td></tr>
+      <tr><td>اسکریپت بررسی داده، محاسبهٔ حجم و خودآزمایی به زبان MQL5</td><td><span class="pill">ساخته‌شده</span></td><td class="gate-stop">کامپایل‌نشده</td></tr>
+      <tr><td>اکسپرت کامل، سایدکار هوش مصنوعی، استراتژی، VPS</td><td><span class="pill money">فقط طراحی</span></td><td>—</td></tr>
+      <tr><td><strong>آزمون در MetaTrader با حساب دمو</strong></td><td colspan="2" class="gate-stop">هنوز هیچ بخشی. این محیط ویندوز و متاتریدر ندارد، و دسترسی شبکه به سرور دانلود MT5 برقرار نشد</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">قدم بعدی با شما: باز کردن حساب دموی ECN روی MT5، اجرای اسکریپت DataProbe (راهنما در <span class="num">mt5/README.md</span>) و فرستادن فایل خروجی. این کار «دفتر سفارش در دسترس نیست» را از حدس به شاهد تبدیل می‌کند.</p>
+</section>
+
+<section id="facts">
+  <span class="eyebrow">شواهد تا امروز</span>
+  <h2>قابلیت عمومی متاتریدر در برابر حساب ما</h2>
+  <div class="verdict">
+    <div><span class="tag t-q">در انتظار اندازه‌گیری</span><h3>دفتر سفارش واقعی، محتمل نیست</h3><p>متاتریدر در حالت کلی عمق بازار را پشتیبانی می‌کند، ولی طبق راهنمای رسمی، دادهٔ واقعی فقط برای نمادهای بورسی است. حساب ECN این کارگزار «Market Execution» دارد و نمادهایش CFD هستند. دادهٔ واقعی حساب ما هنوز اندازه‌گیری نشده است.</p></div>
+    <div><span class="tag t-q">ریسک</span><h3>کارگزار زیر نظارت نیست</h3><p>LiteFinance Global LLC در سنت‌وینسنت ثبت شده و ناظر مالی ندارد. بیش از مبلغی که از دست دادنش را تحمل می‌کنید در حساب نگه ندارید و سودها را منظم برداشت کنید.</p></div>
+    <div><span class="tag t-ok">مزیت</span><h3>دسترسی و آزمون آسان</h3><p>مشتریان ایرانی را رسماً می‌پذیرد، حساب دمو و حساب سنت با واریز ۱۰ دلاری دارد، و تاریخچهٔ تیک واقعی‌اش در Strategy Tester در دسترس است.</p></div>
+  </div>
+</section>
+
+<section id="arch">
+  <span class="eyebrow">معماری</span>
+  <h2>منطق حیاتی داخل اکسپرت، هوش مصنوعی کنارش</h2>
+  <p>همه‌چیز روی یک سرور ویندوزی ۲۴ ساعته نزدیک سرور کارگزار اجرا می‌شود. هر چیزی که باید سریع و ایمن باشد داخل خود اکسپرت (MQL5) است. اگر پایتون یا API هوش مصنوعی از کار بیفتد، اکسپرت همچنان حد ضرر و سقف ضرر را کنترل می‌کند.</p>
+  <div class="pipe">
+    <div class="stage"><b>اکسپرت: داده و سیگنال</b><p>تیک‌ها، کندل‌ها و پایش اسپرد؛ سیگنال با قواعد قطعی که در Strategy Tester با تیک واقعی قابل آزمون است.</p></div>
+    <div class="stage risk"><b>اکسپرت: حجم و ریسک</b><p>حجم را از موجودی حساب محاسبه می‌کند، سقف‌های ضرر را اعمال می‌کند و کلید توقف اضطراری دارد. حرف آخر با این لایه است.</p></div>
+    <div class="stage"><b>اکسپرت: اجرا</b><p>SL و TP روی سرور کارگزار؛ تلاش مجدد کنترل‌شده؛ بازیابی وضعیت پس از راه‌اندازی مجدد، بدون سفارش تکراری.</p></div>
+    <div class="stage ai"><b>سایدکار هوش مصنوعی</b><p>برنامهٔ پایتونی که هر ۳۰ دقیقه خلاصهٔ بازار را از اکسپرت می‌گیرد و فایل مجوز می‌نویسد. فایل قدیمی‌تر از ۴۵ دقیقه یا خراب یعنی «ورود جدید ممنوع».</p></div>
+    <div class="stage"><b>پایش</b><p>راه‌اندازی مجدد خودکار ترمینال و سایدکار، ضربان قلب به یک سرویس پایش خارجی، و گزارش روزانه.</p></div>
+  </div>
+  <div class="flow" aria-label="مسیر ارتباط فایل‌ها">
+    <span class="box">اکسپرت</span><span class="arrow">←</span><span class="box num">market_summary.json</span><span class="arrow">←</span><span class="box">مدل زبانی</span><span class="arrow">←</span><span class="box num">ai_permission.json</span><span class="arrow">←</span><span class="box">اکسپرت</span>
+  </div>
+</section>
+
+<section id="sizing">
+  <span class="eyebrow">حجم معامله · اعداد: تنظیم پیشنهادی</span>
+  <h2>ربات خودش موجودی را می‌خواند و حجم را تعیین می‌کند</h2>
+  <ul class="clean">
+    <li><strong>مبنا:</strong> کمترِ بالانس و اکوئیتی. وقتی موقعیتی در ضرر باز است، بالانس از پولی که واقعاً دارید بیشتر است.</li>
+    <li><strong>فرمول:</strong> ریسک پولی تقسیم بر (ضرر هر لات تا حد ضرر به‌علاوهٔ کمیسیون)، و همیشه گرد کردن رو به پایین به گام حجم کارگزار.</li>
+    <li><strong>حجم کمتر از حداقل مجاز:</strong> معامله انجام نمی‌شود. ربات هرگز «حداقل حجم» را به‌جای حجم درست باز نمی‌کند.</li>
+    <li><strong>رشد و افت:</strong> با بزرگ شدن حساب حجم بزرگ می‌شود. با ۱۰٪ افت از اوج، ریسک نصف و با ۱۵٪ افت، یک‌چهارم می‌شود.</li>
+    <li><strong>واریز و برداشت</strong> تشخیص داده می‌شود و با سود و ضرر اشتباه گرفته نمی‌شود.</li>
+    <li><strong>مشخصات نماد</strong> مثل ارزش تیک و گام حجم از خود کارگزار خوانده می‌شود.</li>
+  </ul>
+  <div class="tbl"><table>
+    <thead><tr><th>سقف ثابت</th><th>مقدار</th><th>پیامد</th></tr></thead>
+    <tbody>
+      <tr><td>ریسک هر معامله</td><td class="n">0.75%</td><td>فقط توسط شما قابل تغییر است</td></tr>
+      <tr><td>مجموع ریسک موقعیت‌های باز</td><td class="n">1.5%</td><td>نمادهای هم‌جهت با دلار یک ریسک حساب می‌شوند</td></tr>
+      <tr><td>ضرر روزانه، شامل ضرر شناور</td><td class="n">2%</td><td>قفل تا روز بعد</td></tr>
+      <tr><td>ضرر هفتگی</td><td class="n">5%</td><td>قفل تا هفتهٔ بعد، همراه با گزارش علت</td></tr>
+      <tr><td>افت از بالاترین اکوئیتی</td><td class="n">20%</td><td>توقف کامل تا تصمیم شما</td></tr>
+      <tr><td>اهرم مؤثر</td><td class="n">≤ 1:10</td><td>مستقل از اهرم ۱:۱۰۰۰ کارگزار</td></tr>
+      <tr><td>اسپرد غیرعادی یا اخبار مهم</td><td class="n">&gt;2× · ±15m</td><td>ورود ممنوع</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">ممنوع در کد: مارتینگل، شبکه‌ای (Grid)، میانگین‌کردن در ضرر، معامله بدون حد ضرر، و بزرگ‌تر کردن حد ضرر پس از ورود.</p>
+</section>
+
+<section id="ai">
+  <span class="eyebrow">هوش مصنوعی</span>
+  <h2>یک رابط، هر مدلی که برای شما مجاز باشد</h2>
+  <p>کد با قالب استاندارد سازگار با OpenAI نوشته می‌شود که تقریباً همهٔ ارائه‌دهندگان و سرورهای محلی از آن پشتیبانی می‌کنند. برای Claude یک مبدل جدا نوشته می‌شود. عوض کردن مدل فقط تغییر پیکربندی است. پاسخ مدل فقط می‌تواند ریسک را کم کند.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>حالت</th><th>گزینه</th><th>ماهانه</th><th>ملاحظه</th></tr></thead>
+    <tbody>
+      <tr><td>رایگان</td><td>مدل‌های رایگان OpenRouter</td><td class="n">$0</td><td>۵۰ درخواست در روز؛ با ۱۰ دلار شارژ یک‌باره ۱٬۰۰۰ درخواست. شرایط کشوری تأییدنشده</td></tr>
+      <tr><td>ارزان</td><td>DeepSeek V4.1 Flash و V4 Pro</td><td class="n">≈ $5</td><td>شرایط کشوری تأییدنشده</td></tr>
+      <tr><td>باکیفیت</td><td>Claude Haiku 4.5 و Sonnet 5</td><td class="n">≈ $13</td><td>ساکنان ایران را نمی‌پذیرد</td></tr>
+      <tr><td>مستقل از تحریم</td><td>مدل متن‌باز Qwen روی سرور خودمان</td><td class="n">$0 + سرور</td><td>حدود ۴ تا ۱۰ توکن در ثانیه روی پردازنده؛ برای یک پاسخ در هر ۳۰ دقیقه کافی است</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><p><strong>سنجش ارزش:</strong> دو حساب دمو، یکی با هوش مصنوعی و یکی بدون آن، ۶ تا ۸ هفته موازی اجرا می‌شوند. این سنجش فقط رو به جلو معتبر است، چون مدل ممکن است اتفاقات گذشتهٔ بازار را از آموزشش «بداند». اگر بهبودی نبود، هوش مصنوعی فقط گزارش روزانه را می‌نویسد.</p></div>
+</section>
+
+<section id="cost">
+  <span class="eyebrow">هزینه و سرمایه · همه برآورد است مگر اینکه منبع داشته باشد</span>
+  <h2>برآورد کل هزینه</h2>
+  <div class="big">
+    <div><span class="v">$50–75</span><span class="l">کل هزینه تا پایان دمو (حدود ۴ ماه)، بدون سرمایهٔ در خطر</span></div>
+    <div><span class="v">≈ $30</span><span class="l">هزینهٔ ماهانهٔ پیشنهادی در زمان اجرا (سرور ۲۵ و هوش مصنوعی حدود ۵ دلار)</span></div>
+    <div><span class="v">$0–45</span><span class="l">بازهٔ هزینهٔ ماهانه، از حالت کاملاً رایگان تا مدل محلی</span></div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>سناریو</th><th>سرور</th><th>هوش مصنوعی</th><th>جمع ماهانه</th></tr></thead>
+    <tbody>
+      <tr><td>حداقل</td><td>VPS لایت‌فایننس ۲۵ دلار (با ۲ لات معامله در ماه رایگان)</td><td>رایگان</td><td class="n">$0–25</td></tr>
+      <tr><td>پیشنهادی</td><td class="n">$25</td><td>API ارزان</td><td class="n">≈ $30</td></tr>
+      <tr><td>مستقل از تحریم</td><td>$25 + سرور لینوکس ۱۶ گیگ (تأییدنشده)</td><td>مدل محلی</td><td class="n">≈ $40–45</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">اسپرد و کمیسیون جداگانه در همهٔ نتایج آزمون کسر می‌شوند. کمیسیون حساب ECN برای فارکس و فلزات ۵ دلار برای هر لات است.</p>
+
+  <h3>سرمایه‌ای که هزینه‌ها را توجیه کند</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>سرمایه</th><th>سود ماهانهٔ لازم فقط برای پوشش ۳۰ دلار هزینه</th><th>ارزیابی</th></tr></thead>
+    <tbody>
+      <tr><td class="n">$300</td><td class="n">10%</td><td>غیرواقع‌بینانه</td></tr>
+      <tr><td class="n">$1,000</td><td class="n">3%</td><td>بسیار دشوار</td></tr>
+      <tr><td class="n">$3,000</td><td class="n">1%</td><td>ممکن، اگر لبهٔ معاملاتی ثابت شود</td></tr>
+      <tr><td class="n">$10,000</td><td class="n">0.3%</td><td>راحت</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><p><strong>ورود مرحله‌ای، هر مرحله با تأیید شما:</strong> ۱) حساب سنت با ۲۰ تا ۵۰ دلار به مدت ۴ هفته، فقط برای سنجش اجرای واقعی؛ ۲) حساب ECN با دست‌کم ۱٬۰۰۰ دلار، فقط اگر مرحلهٔ دمو موفق بود؛ ۳) افزایش سرمایه بر اساس نتایج واقعی و با در نظر گرفتن ریسک کارگزار.</p></div>
+</section>
+
+<section id="autonomy">
+  <span class="eyebrow">خودمختاری</span>
+  <h2>بدون حضور شما، در چارچوبی که نمی‌تواند از آن خارج شود</h2>
+  <div class="two">
+    <div>
+      <h3>کاملاً خودکار</h3>
+      <ul class="clean">
+        <li>تحلیل، ورود، خروج، تعیین حجم و معامله‌نکردن، ۲۴ ساعته</li>
+        <li>اتصال مجدد، بازیابی وضعیت و راه‌اندازی مجدد</li>
+        <li>قفل با رسیدن به سقف ضرر و ازسرگیری خودکار در روز یا هفتهٔ بعد</li>
+        <li>گزارش روزانه و هشدار فوری</li>
+      </ul>
+    </div>
+    <div>
+      <h3>فقط با تصمیم شما</h3>
+      <ul class="clean">
+        <li>واریز پول واقعی و فعال کردن حساب واقعی</li>
+        <li>تغییر سقف‌های ریسک</li>
+        <li>ازسرگیری پس از ۲۰٪ افت سرمایه</li>
+        <li>برداشت وجه: ربات هیچ دسترسی‌ای به آن ندارد</li>
+      </ul>
+    </div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>اتفاق</th><th>رفتار ربات</th></tr></thead>
+    <tbody>
+      <tr><td>قطع اینترنت یا خاموشی سرور</td><td>SL و TP روی سرور کارگزار فعال‌اند؛ پایش خارجی هشدار «ربات خاموش است» می‌فرستد</td></tr>
+      <tr><td>بسته شدن ترمینال</td><td>راه‌اندازی مجدد خودکار، تطبیق وضعیت با کارگزار، بدون سفارش تکراری</td></tr>
+      <tr><td>خرابی هوش مصنوعی یا فایل مجوز</td><td>ورود جدید ممنوع؛ موقعیت‌های باز طبق قواعد عادی مدیریت می‌شوند</td></tr>
+      <tr><td>۳ خطای پشت‌سرهم در ارسال سفارش</td><td>توقف و هشدار</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="roadmap">
+  <span class="eyebrow">نقشهٔ راه · مدت‌ها برآورد است</span>
+  <h2>هشت فاز تا حساب واقعی</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>فاز</th><th>کار</th><th>مدت</th><th>معیار</th></tr></thead>
+    <tbody>
+      <tr><td class="n">0</td><td>حساب دمو ECN روی MT5؛ مشخصات نمادها؛ اندازه‌گیری اسپرد؛ بررسی عمق بازار</td><td>۱ هفته</td><td class="phase-gate"><span class="gate-ok">عبور:</span> ثبت هزینه‌ها و مشخصات واقعی</td></tr>
+      <tr><td class="n">1</td><td>اسکلت اکسپرت: حجم و ریسک، اجرا، بازیابی، ثبت</td><td>۲ تا ۳ هفته</td><td class="phase-gate"><span class="gate-ok">عبور:</span> آزمون‌های ماژول حجم؛ اجرای بدون خطا در Strategy Tester</td></tr>
+      <tr><td class="n">2</td><td>پژوهش روی XAUUSD و EURUSD با تیک واقعی، Walk-Forward و مونت‌کارلو</td><td>۴ تا ۶ هفته</td><td class="phase-gate"><span class="gate-ok">عبور:</span> ۳۰۰ معامله یا بیشتر، سود خالص با دو برابر هزینه‌ها، افت p95 زیر ۱۵٪<br><span class="gate-stop">توقف:</span> نبود لبه</td></tr>
+      <tr><td class="n">3</td><td>سایدکار هوش مصنوعی و آزمون ارائه‌دهندگان</td><td>۲ هفته، موازی</td><td class="phase-gate"><span class="gate-ok">عبور:</span> ۹۹٪ پاسخ معتبر؛ رفتار ایمن هنگام خطا</td></tr>
+      <tr><td class="n">4</td><td>آزمون‌های خرابی عمدی روی دمو</td><td>۱ تا ۲ هفته</td><td class="phase-gate"><span class="gate-ok">عبور:</span> قبولی در همهٔ سناریوها</td></tr>
+      <tr><td class="n">5</td><td>اجرای ۲۴ ساعته روی VPS با دو حساب دمو</td><td>۶ تا ۸ هفته</td><td class="phase-gate"><span class="gate-ok">عبور:</span> نتایج در بازهٔ اطمینان آزمون</td></tr>
+      <tr><td class="n">6</td><td>حساب سنت واقعی <span class="pill money">تأیید شما</span></td><td>۴ هفته</td><td class="phase-gate"><span class="gate-ok">عبور:</span> اختلاف اجرای واقعی با دمو قابل قبول</td></tr>
+      <tr><td class="n">7</td><td>حساب ECN واقعی <span class="pill money">تأیید شما</span></td><td>ادامه‌دار</td><td class="phase-gate"><span class="gate-stop">توقف:</span> ۲۰٪ افت سرمایه</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="history">
+  <span class="eyebrow">مسیرهای بررسی‌شدهٔ قبلی</span>
+  <h2>چرا آن گزینه‌ها کنار رفتند</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>مسیر</th><th>قوت</th><th>دلیل کنار رفتن</th></tr></thead>
+    <tbody>
+      <tr><td>قرارداد آتی CME با Databento و NinjaTrader</td><td>دفتر سفارش واقعی و بازار تحت نظارت</td><td>هزینهٔ ثابت حدود ۲۷۰ دلار در ماه؛ ساکنان ایران را نمی‌پذیرد</td></tr>
+      <tr><td>قرارداد دائمی رمزارز در Binance یا Bybit</td><td>دفتر سفارش رایگان و ۲۴ ساعته</td><td>ساکنان ایران را نمی‌پذیرند؛ شما LiteFinance را انتخاب کردید</td></tr>
+      <tr><td>MetaTrader 5 با LiteFinance</td><td>در دسترس، دمو و حساب سنت، آزمون با تیک واقعی</td><td><span class="pill">مسیر فعلی</span> بدون دفتر سفارش واقعی</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="open">
+  <span class="eyebrow">سؤال باز</span>
+  <h2>محل اقامت، برای انتخاب مدل زبانی</h2>
+  <p>انتخاب LiteFinance با اقامت در ایران سازگار است. اگر ساکن ایران هستید، لطفاً تأیید کنید تا Claude، OpenAI و Gemini را از فهرست گزینه‌ها حذف کنم. استفاده از سرور خارجی این محدودیت را قانونی نمی‌کند، چون شرط این شرکت‌ها محل اقامت کاربر است.</p>
+  <div class="callout red"><p>هیچ اشتراکی خریداری نمی‌شود، هیچ پولی واریز نمی‌شود و هیچ معامله‌ای با پول واقعی انجام نمی‌شود، مگر با تأیید صریح شما.</p></div>
+</section>
+
+<section class="sources" id="sources">
+  <span class="eyebrow">منابع (بررسی‌شده در ۲۴ سپتامبر ۲۰۲۶)</span>
+  <ul>
+    <li><a href="https://www.litefinance.org/trading/account-types/ecn/">LiteFinance: حساب ECN</a> · <a href="https://www.litefinance.org/trading/account-types/cent/">حساب سنت</a> · <a href="https://www.litefinance.org/trading/additional-services/vps-services/">VPS</a> · <a href="https://www.litefinance.org/promo/codes/?code=freevps">VPS رایگان</a></li>
+    <li><a href="https://www.daytrading.com/litefinance">بررسی مستقل LiteFinance: شخصیت‌های حقوقی و نظارت</a></li>
+    <li><a href="https://www.metatrader5.com/en/terminal/help/trading/depth_of_market">MetaTrader 5: عمق بازار در بازار OTC</a> · <a href="https://www.mql5.com/en/forum/457940">پایتون MetaTrader5 فقط روی ویندوز</a></li>
+    <li><a href="https://openrouter.ai/docs/api_reference/limits">OpenRouter: سقف مدل‌های رایگان</a> · <a href="https://costgoat.com/pricing/deepseek-api">DeepSeek: قیمت</a> · <a href="https://ai.google.dev/gemini-api/docs/rate-limits">Gemini: نسخهٔ رایگان</a> · <a href="https://www.anthropic.com/supported-countries">Anthropic: کشورهای پشتیبانی‌شده</a></li>
+    <li><a href="https://singhajit.com/llm-inference-speed-comparison/">سرعت llama.cpp روی پردازنده</a></li>
+    <li><a href="https://www.mql5.com/en/docs/constants/environment_state/marketinfoconstants">MQL5: ویژگی‌های نماد</a> · <a href="https://apidocs.nobitex.ir/en/">API نوبیتکس</a> · <a href="https://help.nobitex.ir/knowledgebase/trading-fees/">کارمزد نوبیتکس</a> · <a href="https://iranbroker.net/news/central-banks-conditions-for-reopening-exchange-offices-have-been-announced/">محدودیت‌های بانک مرکزی</a></li>
+    <li><a href="https://ninjatrader.com/pricing/">NinjaTrader</a> · <a href="https://databento.com/pricing">Databento</a> · <a href="https://bybit-exchange.github.io/docs/v5/demo">Bybit Demo</a> (مسیرهای قبلی)</li>
+  </ul>
+</section>
+
+<footer>متن کامل در مخزن پروژه: <span class="num">docs/04-l2-impact-and-evidence.md</span> (شواهد و پیشنهاد)، <span class="num">docs/03-mt5-litefinance-design.md</span> (طرح MT5)، و <span class="num">01</span> و <span class="num">02</span> (مسیرهای قبلی)</footer>
+</div>
+
+<script>
+(function(){
+  var SPEC={
+    xau:{tickSize:0.01,tickValue:1.0,volMin:0.01,volStep:0.01,commRT:10,slLabel:'حد ضرر (دلار حرکت قیمت)',slDefault:6,slToPrice:function(v){return v;}},
+    eur:{tickSize:0.00001,tickValue:1.0,volMin:0.01,volStep:0.01,commRT:10,slLabel:'حد ضرر (پیپ)',slDefault:15,slToPrice:function(v){return v*0.0001;}}
+  };
+  var $=function(id){return document.getElementById(id);};
+  var fmt=function(n){return '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});};
+  var fa=function(n){return n.toLocaleString('fa-IR',{maximumFractionDigits:2});};
+  var lastSym='xau';
+  function num(id){var v=parseFloat($(id).value);return isFinite(v)&&v>=0?v:0;}
+  function calc(){
+    var symKey=$('c-sym').value, s=SPEC[symKey];
+    if(symKey!==lastSym){ $('c-sl').value=s.slDefault; lastSym=symKey; }
+    $('c-sl-label').textContent=s.slLabel;
+    var base=Math.min(num('c-bal'),num('c-eq'));
+    var risk=Math.min(num('c-risk'),2)/100;
+    var ai=Math.min(num('c-ai'),1);
+    var budget=base*risk*ai;
+    var slPrice=s.slToPrice(num('c-sl'));
+    var lossPerLot=(slPrice/s.tickSize)*s.tickValue+s.commRT;
+    var raw=lossPerLot>0?budget/lossPerLot:0;
+    var lots=Math.floor(raw/s.volStep+1e-9)*s.volStep;
+    $('r-base').textContent=fmt(base);
+    $('r-budget').textContent=fmt(budget);
+    var v=$('r-verdict');
+    if(slPrice<=0||base<=0){
+      $('r-lot').textContent='—'; $('r-actual').textContent='—';
+      v.className='verdict-line v-no'; v.textContent='موجودی و حد ضرر باید بزرگ‌تر از صفر باشند.'; return;
+    }
+    if(ai===0){
+      $('r-lot').textContent='0'; $('r-actual').textContent=fmt(0);
+      v.className='verdict-line v-no'; v.textContent='هوش مصنوعی ورود را مجاز ندانسته است؛ معامله‌ای باز نمی‌شود.'; return;
+    }
+    if(lots<s.volMin){
+      var minRisk=s.volMin*lossPerLot;
+      $('r-lot').textContent='0'; $('r-actual').textContent='—';
+      v.className='verdict-line v-no';
+      v.textContent='معامله انجام نمی‌شود: حداقل حجم ('+s.volMin+' لات) '+fmt(minRisk)+' ریسک دارد، یعنی '+fa(minRisk/base*100)+'٪ موجودی. موجودی بیشتر یا حد ضرر کوچک‌تر لازم است.';
+      return;
+    }
+    var actual=lots*lossPerLot;
+    $('r-lot').textContent=lots.toFixed(2);
+    $('r-actual').textContent=fmt(actual)+' ('+(actual/base*100).toFixed(2)+'%)';
+    v.className='verdict-line v-ok';
+    v.textContent='مجاز. ریسک واقعی با احتساب کمیسیون، و به‌دلیل گرد کردن رو به پایین کمی کمتر از بودجه است.';
+  }
+  ['c-bal','c-eq','c-sym','c-sl','c-risk','c-ai'].forEach(function(id){ $(id).addEventListener('input',calc); $(id).addEventListener('change',calc); });
+  $('calc').addEventListener('submit',function(e){e.preventDefault();});
+  calc();
+})();
+</script>
